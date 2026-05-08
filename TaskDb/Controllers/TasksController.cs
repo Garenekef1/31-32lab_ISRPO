@@ -201,6 +201,16 @@ public class TasksController(AppDbContext db) : ControllerBase
         return Ok(task);
     }
 
+    [HttpPatch("complete-all")]
+    public async Task<IActionResult> CompleteAll()
+    {
+        var count = await _db.Tasks
+            .Where(task => !task.IsCompleted)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(task => task.IsCompleted, true));
+
+        return Ok(new { updated = count });
+    }
+
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
@@ -215,5 +225,15 @@ public class TasksController(AppDbContext db) : ControllerBase
         await _db.SaveChangesAsync();
 
         return NoContent();
+    }
+
+    [HttpDelete("completed")]
+    public async Task<IActionResult> DeleteCompleted()
+    {
+        var count = await _db.Tasks
+            .Where(task => task.IsCompleted)
+            .ExecuteDeleteAsync();
+
+        return Ok(new { deleted = count });
     }
 }
