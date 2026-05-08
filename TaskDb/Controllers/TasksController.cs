@@ -134,6 +134,17 @@ public class TasksController(AppDbContext db) : ControllerBase
         });
     }
 
+    [HttpGet("overdue")]
+    public async Task<ActionResult<List<TaskItem>>> GetOverdue()
+    {
+        var tasks = await _db.Tasks
+            .Where(task => task.DueDate != null && task.DueDate < DateTime.UtcNow && !task.IsCompleted)
+            .OrderBy(task => task.DueDate)
+            .ToListAsync();
+
+        return Ok(tasks);
+    }
+
     [HttpPost]
     public async Task<ActionResult<TaskItem>> Create(CreateTaskDto dto)
     {
@@ -143,7 +154,8 @@ public class TasksController(AppDbContext db) : ControllerBase
             Description = dto.Description,
             Priority = dto.Priority,
             IsCompleted = false,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            DueDate = dto.DueDate
         };
 
         _db.Tasks.Add(task);
@@ -166,6 +178,7 @@ public class TasksController(AppDbContext db) : ControllerBase
         task.Description = dto.Description;
         task.IsCompleted = dto.IsCompleted;
         task.Priority = dto.Priority;
+        task.DueDate = dto.DueDate;
 
         await _db.SaveChangesAsync();
 
